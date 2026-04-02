@@ -11,7 +11,7 @@ const POSTS = [
   { id: 5, cat: "Housing",             tag: "FHSA",     color: "#2a5a6a", title: "First Home Savings Account: The Complete 2026 Guide for BC Residents", date: "Feb 17, 2026", read: "10 min" },
 ];
 
-function Maple({ size = 22, color = C.amber }) {
+function Maple({ size = 22, color = C.amber }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill={color}>
       <path d="M50 5L57 30L75 20L65 40L90 38L72 55L80 80L60 68L50 90L40 68L20 80L28 55L10 38L35 40L25 20L43 30Z" />
@@ -19,7 +19,7 @@ function Maple({ size = 22, color = C.amber }) {
   );
 }
 
-function NewsletterPopup({ onClose }) {
+function NewsletterPopup({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   return (
@@ -71,7 +71,7 @@ function NewsletterPopup({ onClose }) {
   );
 }
 
-function FeaturedCarousel() {
+function FeaturedCarousel(): JSX.Element {
   const trackRef = useRef(null);
   const rafRef = useRef(null);
   const pausedRef = useRef(false);
