@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { C, FD, FB, FM } from "../styles/tokens";
+import { C, FD, FB } from "../styles/tokens";
 
 function Maple({ size = 20, color = C.amberL }: { size?: number; color?: string }) {
   return (
@@ -14,7 +14,6 @@ function Maple({ size = 20, color = C.amberL }: { size?: number; color?: string 
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mOpen, setMOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -24,58 +23,62 @@ export default function Navbar() {
   }, []);
 
   const links = [
-    { href: "/",          label: "Home"    },
-    { href: "/blog",      label: "Blog"    },
-    { href: "/about",     label: "About"   },
-    { href: "/contact",   label: "Contact" },
+    { href: "/",        label: "Home"    },
+    { href: "/blog",    label: "Blog"    },
+    { href: "/about",   label: "About"   },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
-    <header style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-      background: scrolled ? "rgba(253,248,240,0.97)" : "rgba(253,248,240,0.65)",
-      backdropFilter: "blur(14px)",
-      borderBottom: `1px solid ${scrolled ? C.creamDD : "transparent"}`,
-      boxShadow: scrolled ? "0 2px 22px rgba(26,58,42,0.08)" : "none",
-      transition: "all 0.3s",
-    }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px",
-        display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+    <>
+      <style>{`
+        .nav-desktop { display: flex; align-items: center; gap: 4px; }
+        @media (max-width: 768px) {
+          .nav-desktop { display: none !important; }
+        }
+      `}</style>
+      <header style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 900,
+        background: scrolled ? "rgba(253,248,240,0.97)" : "rgba(253,248,240,0.85)",
+        backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+        borderBottom: `1px solid ${scrolled ? C.creamDD : "transparent"}`,
+        boxShadow: scrolled ? "0 2px 22px rgba(26,58,42,0.08)" : "none",
+        transition: "all 0.3s", height: 64,
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "100%" }}>
 
-        {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: C.forest,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 10px rgba(26,58,42,0.3)" }}>
-            <Maple size={20} color={C.amberL} />
-          </div>
-          <div>
-            <div style={{ fontFamily: FD, fontWeight: 700, fontSize: 19, color: C.forest, lineHeight: 1.1 }}>HustleHub</div>
-            <div style={{ fontFamily: FB, fontSize: 10, color: C.muted, letterSpacing: "0.12em" }}>.ca — Canadian Finance</div>
-          </div>
-        </Link>
-
-        {/* Desktop links */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {links.map(({ href, label }) => (
-            <Link key={href} href={href} style={{
-              fontFamily: FB, fontSize: 14, fontWeight: pathname === href ? 700 : 500,
-              color: pathname === href ? C.forest : C.muted,
-              background: pathname === href ? C.creamD : "none",
-              padding: "8px 14px", borderRadius: 9, textDecoration: "none",
-              transition: "all 0.2s",
-            }}>{label}</Link>
-          ))}
-          <Link href="/contact" style={{
-            fontFamily: FB, fontSize: 13, fontWeight: 700, color: C.white,
-            background: C.forest, padding: "9px 18px", borderRadius: 10,
-            textDecoration: "none", marginLeft: 8,
-            boxShadow: "0 2px 12px rgba(26,58,42,0.28)",
-          }}>
-            Get Free Updates
+          {/* Logo */}
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: C.forest, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Maple size={18} color={C.amberL} />
+            </div>
+            <div>
+              <div style={{ fontFamily: FD, fontWeight: 700, fontSize: 17, color: C.forest, lineHeight: 1.1, whiteSpace: "nowrap" }}>HustleHub</div>
+              <div style={{ fontFamily: FB, fontSize: 9, color: C.muted, letterSpacing: "0.1em", whiteSpace: "nowrap" }}>.ca — Canadian Finance</div>
+            </div>
           </Link>
-        </nav>
-      </div>
-    </header>
+
+          {/* Desktop nav only */}
+          <nav className="nav-desktop">
+            {links.map(({ href, label }) => (
+              <Link key={href} href={href} style={{
+                fontFamily: FB, fontSize: 14,
+                fontWeight: pathname === href ? 700 : 500,
+                color: pathname === href ? C.forest : C.muted,
+                background: pathname === href ? C.creamD : "none",
+                padding: "8px 14px", borderRadius: 9, textDecoration: "none",
+                transition: "all 0.2s", whiteSpace: "nowrap",
+              }}>{label}</Link>
+            ))}
+            <Link href="/contact" style={{
+              fontFamily: FB, fontSize: 13, fontWeight: 700, color: C.white,
+              background: C.forest, padding: "9px 18px", borderRadius: 10,
+              textDecoration: "none", marginLeft: 8, whiteSpace: "nowrap",
+              boxShadow: "0 2px 12px rgba(26,58,42,0.28)",
+            }}>Get Free Updates</Link>
+          </nav>
+        </div>
+      </header>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { C, FD, FB, FM } from "../../styles/tokens";
+import { C, FD, FB } from "../../styles/tokens";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", topic: "", msg: "" });
@@ -22,29 +22,29 @@ export default function ContactPage() {
         </div>
       </div>
 
-      {/* Quick info — mobile friendly row */}
+      {/* Quick info strip */}
       <div style={{ background: C.white, borderBottom: "1px solid #e8dcc8" }}>
-        <div style={{ maxWidth: 1020, margin: "0 auto", padding: "20px 24px", display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center" }}>
+        <div style={{ maxWidth: 1020, margin: "0 auto", padding: "18px 24px", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center" }}>
           {[
-            { icon: "📍", label: "Based in",       val: "Abbotsford, BC"         },
-            { icon: "🕐", label: "Response time",  val: "Within 2 business days" },
-            { icon: "🌐", label: "Coverage",       val: "All of Canada"          },
-            { icon: "💬", label: "Languages",      val: "English & Punjabi"      },
+            { icon: "📍", label: "Based in",      val: "Abbotsford, BC"         },
+            { icon: "🕐", label: "Response time", val: "Within 2 business days" },
+            { icon: "🌐", label: "Coverage",      val: "All of Canada"          },
+            { icon: "💬", label: "Languages",     val: "English & Punjabi"      },
           ].map(({ icon, label, val }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 160 }}>
-              <span style={{ fontSize: 20 }}>{icon}</span>
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 18 }}>{icon}</span>
               <div>
                 <div style={{ fontFamily: FB, fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
-                <div style={{ fontFamily: FB, fontSize: 13, color: C.charcoal, marginTop: 1 }}>{val}</div>
+                <div style={{ fontFamily: FB, fontSize: 13, color: C.charcoal }}>{val}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Form — full width, centered */}
-      <div style={{ maxWidth: 620, margin: "0 auto", padding: "clamp(32px,5vw,56px) 24px" }}>
-        <div style={{ background: C.white, borderRadius: 20, padding: "clamp(24px,4vw,40px)", border: "1.5px solid #e8dcc8", boxShadow: "0 4px 24px rgba(26,58,42,0.07)" }}>
+      {/* Form */}
+      <div style={{ maxWidth: 580, margin: "0 auto", padding: "clamp(28px,5vw,52px) 24px" }}>
+        <div style={{ background: C.white, borderRadius: 20, padding: "clamp(22px,4vw,40px)", border: "1.5px solid #e8dcc8", boxShadow: "0 4px 24px rgba(26,58,42,0.07)" }}>
           <h2 style={{ fontFamily: FD, fontSize: "clamp(20px,3vw,24px)", fontWeight: 700, color: C.forest, marginBottom: 24 }}>Send a Message</h2>
 
           {sent ? (
@@ -56,10 +56,9 @@ export default function ContactPage() {
           ) : (
             <form onSubmit={e => { e.preventDefault(); if (form.name && form.email && form.msg) setSent(true); }}
               style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-
               {[
-                { label: "Your Name",      key: "name",  type: "text",  placeholder: "Jane Smith"        },
-                { label: "Email Address",  key: "email", type: "email", placeholder: "jane@example.ca"   },
+                { label: "Your Name",     key: "name",  type: "text",  placeholder: "Jane Smith"       },
+                { label: "Email Address", key: "email", type: "email", placeholder: "jane@example.ca"  },
               ].map(({ label, key, type, placeholder }) => (
                 <div key={key}>
                   <label style={{ fontFamily: FB, fontSize: 11, fontWeight: 700, color: C.forest, letterSpacing: "0.06em", display: "block", marginBottom: 7, textTransform: "uppercase" }}>{label}</label>
@@ -86,7 +85,7 @@ export default function ContactPage() {
                   style={{ fontFamily: FB, fontSize: 15, padding: "13px 15px", borderRadius: 11, border: "1.5px solid #e8dcc8", background: C.cream, color: C.charcoal, width: "100%", outline: "none", resize: "vertical", lineHeight: 1.65, boxSizing: "border-box" }} />
               </div>
 
-              <button type="submit" style={{ fontFamily: FB, fontSize: 15, fontWeight: 700, color: C.white, background: C.forest, border: "none", borderRadius: 12, padding: "15px", cursor: "pointer", minHeight: 52, marginTop: 4 }}>
+              <button type="submit" style={{ fontFamily: FB, fontSize: 15, fontWeight: 700, color: C.white, background: C.forest, border: "none", borderRadius: 12, padding: "15px", cursor: "pointer", minHeight: 52 }}>
                 Send Message
               </button>
             </form>
