@@ -41,6 +41,11 @@ function readTime(content: string) {
   return `${Math.max(1, Math.round(words / 200))} min`;
 }
 
+function toHttps(url: string) {
+  if (!url) return url;
+  return url.replace("http://", "https://");
+}
+
 const COLORS = ["#1a3a2a","#c97a0a","#2d5a42","#5a3e28","#2a5a6a","#3a2a5a"];
 
 export default async function BlogPage() {
@@ -94,14 +99,19 @@ export default async function BlogPage() {
             {posts.map((post: any, i: number) => {
               const color = COLORS[i % COLORS.length];
               const excerpt = stripHtml(post.excerpt?.rendered || "");
-              const thumbnail = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+              const thumbnail = toHttps(post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "");
               const category = post._embedded?.["wp:term"]?.[0]?.[0]?.name || "Guide";
               return (
-                <Link key={post.id} href={`/blog/${post.slug}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: 18, overflow: "hidden", border: "1.5px solid #e8dcc8", boxShadow: "0 2px 14px rgba(26,58,42,0.06)", transition: "transform 0.2s" }}>
-                  {/* Image or color block */}
+                <Link key={post.id} href={`/blog/${post.slug}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: 18, overflow: "hidden", border: "1.5px solid #e8dcc8", boxShadow: "0 2px 14px rgba(26,58,42,0.06)" }}>
                   {thumbnail ? (
-                    <div style={{ height: 160, overflow: "hidden" }}>
-                      <img src={thumbnail} alt={post.title?.rendered || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ height: 160, overflow: "hidden", background: "#f2e8d8" }}>
+                      <img
+                        src={thumbnail}
+                        alt={stripHtml(post.title?.rendered || "")}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                      />
                     </div>
                   ) : (
                     <div style={{ height: 100, background: `linear-gradient(150deg,${color},${color}99)`, display: "flex", alignItems: "flex-end", padding: "12px 16px" }}>
