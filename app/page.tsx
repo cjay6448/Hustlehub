@@ -87,7 +87,7 @@ function BenefitTicker() {
                 <span style={{ display: "inline-flex", alignItems: "center", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "6px 16px" }}>
                   <span style={{ fontFamily: FM, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.06em" }}>{b}</span>
                 </span>
-                <span style={{ color: C.amberL, opacity: 0.6, fontSize: 10 }}>•</span>
+                <span style={{ color: C.amberL, opacity: 0.6, fontSize: 10 }}>{"•"}</span>
               </span>
             ))}
           </div>
@@ -230,34 +230,31 @@ export default function Home() {
           <p style={{ fontFamily: FB, fontSize: "clamp(14px,2vw,16px)", color: C.muted, lineHeight: 1.78, marginBottom: 24, maxWidth: 520 }}>
             Government benefits, tax credits, and money guides for real Canadians. No jargon. No advisor fees. Always free.
           </p>
-          {/* Cards + CTAs constrained to 440px on all screens */}
-          <div style={{ maxWidth: 440 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-              <div style={{ background: C.forest, borderRadius: 16, padding: "16px 14px", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", right: -8, bottom: -8, opacity: 0.1 }}><Maple size={60} color={C.amberL} /></div>
-                <div style={{ fontFamily: FM, fontSize: 8, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>Avg. missed / yr</div>
-                <div style={{ fontFamily: FD, fontSize: 26, fontWeight: 900, color: C.amberL, lineHeight: 1 }}><CountUp target={3400} prefix="$" /></div>
-                <div style={{ fontFamily: FB, fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>per family</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24, maxWidth: 380 }}>
+            <div style={{ background: C.forest, borderRadius: 16, padding: "16px 14px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", right: -8, bottom: -8, opacity: 0.1 }}><Maple size={60} color={C.amberL} /></div>
+              <div style={{ fontFamily: FM, fontSize: 8, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>Avg. missed / yr</div>
+              <div style={{ fontFamily: FD, fontSize: "clamp(22px,4vw,28px)", fontWeight: 900, color: C.amberL, lineHeight: 1 }}><CountUp target={3400} prefix="$" /></div>
+              <div style={{ fontFamily: FB, fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>per family</div>
+            </div>
+            <div style={{ background: C.amberPale, border: "1.5px solid #e8d5a0", borderRadius: 16, padding: "16px 14px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", right: -8, bottom: -8, opacity: 0.1 }}><Maple size={60} color={C.amber} /></div>
+              <div style={{ fontFamily: FM, fontSize: 8, color: C.amber, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5, opacity: 0.7 }}>Already reading</div>
+              <div style={{ fontFamily: FD, fontSize: "clamp(22px,4vw,28px)", fontWeight: 900, color: C.forest, lineHeight: 1 }}><CountUpK target={40} /></div>
+              <div style={{ fontFamily: FB, fontSize: 10, color: C.muted, marginTop: 4 }}>Canadians / week</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 11, marginBottom: 22, maxWidth: 480 }}>
+            <a href="/blog" style={{ flex: "1 1 180px", fontFamily: FB, fontSize: 15, fontWeight: 700, color: C.white, background: C.forest, borderRadius: 13, padding: "15px", textDecoration: "none", textAlign: "center", boxShadow: "0 4px 18px rgba(26,58,42,0.28)" }}>Find What I Am Owed</a>
+            <a href="/contact" style={{ flex: "1 1 160px", fontFamily: FB, fontSize: 14, fontWeight: 600, color: C.forest, border: "1.5px solid rgba(26,58,42,0.2)", borderRadius: 13, padding: "13px", textDecoration: "none", textAlign: "center" }}>Get Free Newsletter</a>
+          </div>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            {["No ads","CRA-sourced","Free forever"].map(t => (
+              <div key={t} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.amberL }} />
+                <span style={{ fontFamily: FB, fontSize: 11, color: C.mutedL }}>{t}</span>
               </div>
-              <div style={{ background: C.amberPale, border: "1.5px solid #e8d5a0", borderRadius: 16, padding: "16px 14px", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", right: -8, bottom: -8, opacity: 0.1 }}><Maple size={60} color={C.amber} /></div>
-                <div style={{ fontFamily: FM, fontSize: 8, color: C.amber, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5, opacity: 0.7 }}>Already reading</div>
-                <div style={{ fontFamily: FD, fontSize: 26, fontWeight: 900, color: C.forest, lineHeight: 1 }}><CountUpK target={40} /></div>
-                <div style={{ fontFamily: FB, fontSize: 10, color: C.muted, marginTop: 4 }}>Canadians / week</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              <a href="/blog" style={{ flex: 1, fontFamily: FB, fontSize: 15, fontWeight: 700, color: C.white, background: C.forest, borderRadius: 13, padding: "14px 12px", textDecoration: "none", textAlign: "center", boxShadow: "0 4px 18px rgba(26,58,42,0.28)" }}>Find What I Am Owed</a>
-              <a href="/contact" style={{ flex: 1, fontFamily: FB, fontSize: 14, fontWeight: 600, color: C.forest, border: "1.5px solid rgba(26,58,42,0.2)", borderRadius: 13, padding: "13px 12px", textDecoration: "none", textAlign: "center" }}>Get Free Newsletter</a>
-            </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              {["No ads","CRA-sourced","Free forever"].map(t => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.amberL }} />
-                  <span style={{ fontFamily: FB, fontSize: 11, color: C.mutedL }}>{t}</span>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -282,11 +279,9 @@ export default function Home() {
             <a href="/blog" style={{ fontFamily: FB, fontSize: 13, fontWeight: 600, color: C.forest, border: "1.5px solid rgba(26,58,42,0.2)", borderRadius: 9, padding: "8px 18px", textDecoration: "none" }}>View All</a>
           </div>
         </div>
-        {/* Mobile/tablet — edge to edge, no fades */}
         <div className="carousel-mobile" style={{ overflow: "hidden" }}>
           <FeaturedCarousel />
         </div>
-        {/* Desktop — contained */}
         <div className="carousel-desktop" style={{ maxWidth: 1020, margin: "0 auto", paddingLeft: 24, overflow: "hidden" }}>
           <FeaturedCarousel />
         </div>
