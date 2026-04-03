@@ -11,7 +11,7 @@ function Maple({ size = 22, color = C.amber }: { size?: number; color?: string }
   );
 }
 
-function CountUp({ target, prefix = "", suffix = "" }: { target: number; prefix?: string; suffix?: string }) {
+function CountUp({ target, prefix = "" }: { target: number; prefix?: string }) {
   const [val, setVal] = useState(0);
   const started = useRef(false);
   const rafRef = useRef<number>(0);
@@ -29,7 +29,7 @@ function CountUp({ target, prefix = "", suffix = "" }: { target: number; prefix?
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
-  return <>{prefix}{val.toLocaleString()}{suffix}</>;
+  return <>{prefix}{val.toLocaleString()}</>;
 }
 
 function CountUpK({ target }: { target: number }) {
@@ -51,50 +51,6 @@ function CountUpK({ target }: { target: number }) {
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
   return <>{val}K+</>;
-}
-
-function BenefitTicker() {
-  const benefits = [
-    "GST/HST Credit","Canada Child Benefit","First Home Savings",
-    "Canada Workers Benefit","BC Affordability Credit","Disability Tax Credit",
-    "Caregiver Amount","Climate Action Incentive","Old Age Security","Employment Insurance",
-  ];
-  const [pos, setPos] = useState(0);
-  const rafRef = useRef<number>(0);
-  const paused = useRef(false);
-  useEffect(() => {
-    const step = () => {
-      if (!paused.current) setPos(p => p + 0.45);
-      rafRef.current = requestAnimationFrame(step);
-    };
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
-  const singleWidth = benefits.length * 210;
-  const all = [...benefits, ...benefits, ...benefits];
-  return (
-    <div onMouseEnter={() => { paused.current = true; }} onMouseLeave={() => { paused.current = false; }}
-      style={{ background: C.charcoal, padding: "14px 0", overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "0 20px", borderRight: "1px solid rgba(255,255,255,0.1)", marginRight: 20 }}>
-          <Maple size={12} color={C.amberL} />
-          <span style={{ fontFamily: FM, fontSize: 9, fontWeight: 700, color: C.amberL, letterSpacing: "0.16em", textTransform: "uppercase", whiteSpace: "nowrap" }}>Benefits</span>
-        </div>
-        <div style={{ overflow: "hidden", flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", transform: "translateX(-" + (pos % singleWidth) + "px)", whiteSpace: "nowrap", willChange: "transform" }}>
-            {all.map((b, i) => (
-              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "6px 16px" }}>
-                  <span style={{ fontFamily: FM, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.06em" }}>{b}</span>
-                </span>
-                <span style={{ color: C.amberL, opacity: 0.6, fontSize: 10 }}>{"•"}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function NewsletterPopup({ onClose }: { onClose: () => void }) {
@@ -209,6 +165,13 @@ export default function Home() {
     { icon: "🏠", title: "Housing & Homebuying", body: "First-time buyer grants, BC programs, mortgage math made simple." },
   ];
 
+  const stats = [
+    { n: <CountUpK target={40} />, l: "Monthly Readers"    },
+    { n: "120+",                    l: "Articles Published" },
+    { n: "100%",                    l: "Canadian Content"   },
+    { n: "Free",                    l: "Always & Forever"   },
+  ];
+
   return (
     <main style={{ background: C.cream }}>
       <AnimatePresence>{showPopup && <NewsletterPopup onClose={() => setShowPopup(false)} />}</AnimatePresence>
@@ -230,20 +193,19 @@ export default function Home() {
           <p style={{ fontFamily: FB, fontSize: "clamp(14px,2vw,16px)", color: C.muted, lineHeight: 1.78, marginBottom: 24, maxWidth: 520 }}>
             Government benefits, tax credits, and money guides for real Canadians. No jargon. No advisor fees. Always free.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24, maxWidth: 380 }}>
-            <div style={{ background: C.forest, borderRadius: 16, padding: "16px 14px", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", right: -8, bottom: -8, opacity: 0.1 }}><Maple size={60} color={C.amberL} /></div>
-              <div style={{ fontFamily: FM, fontSize: 8, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>Avg. missed / yr</div>
-              <div style={{ fontFamily: FD, fontSize: "clamp(22px,4vw,28px)", fontWeight: 900, color: C.amberL, lineHeight: 1 }}><CountUp target={3400} prefix="$" /></div>
-              <div style={{ fontFamily: FB, fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>per family</div>
-            </div>
-            <div style={{ background: C.amberPale, border: "1.5px solid #e8d5a0", borderRadius: 16, padding: "16px 14px", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", right: -8, bottom: -8, opacity: 0.1 }}><Maple size={60} color={C.amber} /></div>
-              <div style={{ fontFamily: FM, fontSize: 8, color: C.amber, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5, opacity: 0.7 }}>Already reading</div>
-              <div style={{ fontFamily: FD, fontSize: "clamp(22px,4vw,28px)", fontWeight: 900, color: C.forest, lineHeight: 1 }}><CountUpK target={40} /></div>
-              <div style={{ fontFamily: FB, fontSize: 10, color: C.muted, marginTop: 4 }}>Canadians / week</div>
+
+          {/* FIX 1: Single $3,400 stat card only */}
+          <div style={{ marginBottom: 24, maxWidth: 320 }}>
+            <div style={{ background: C.forest, borderRadius: 16, padding: "18px 20px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", right: -10, bottom: -10, opacity: 0.1 }}><Maple size={80} color={C.amberL} /></div>
+              <div style={{ fontFamily: FM, fontSize: 9, color: "rgba(255,255,255,0.45)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Avg. missed per family / yr</div>
+              <div style={{ fontFamily: FD, fontSize: "clamp(28px,5vw,38px)", fontWeight: 900, color: C.amberL, lineHeight: 1 }}>
+                <CountUp target={3400} prefix="$" />
+              </div>
+              <div style={{ fontFamily: FB, fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 6 }}>in unclaimed Canadian benefits</div>
             </div>
           </div>
+
           <div style={{ display: "flex", flexWrap: "wrap", gap: 11, marginBottom: 22, maxWidth: 480 }}>
             <a href="/blog" style={{ flex: "1 1 180px", fontFamily: FB, fontSize: 15, fontWeight: 700, color: C.white, background: C.forest, borderRadius: 13, padding: "15px", textDecoration: "none", textAlign: "center", boxShadow: "0 4px 18px rgba(26,58,42,0.28)" }}>Find What I Am Owed</a>
             <a href="/contact" style={{ flex: "1 1 160px", fontFamily: FB, fontSize: 14, fontWeight: 600, color: C.forest, border: "1.5px solid rgba(26,58,42,0.2)", borderRadius: 13, padding: "13px", textDecoration: "none", textAlign: "center" }}>Get Free Newsletter</a>
@@ -259,10 +221,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* BENEFIT TICKER */}
-      <BenefitTicker />
+      {/* FIX 2: Green stats bar with 40K counting */}
+      <div style={{ background: C.forest, padding: "28px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
+          {stats.map(({ n, l }, i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontFamily: FD, fontSize: "clamp(22px,3vw,28px)", fontWeight: 800, color: C.amberL }}>{n}</div>
+              <div style={{ fontFamily: FB, fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 4, letterSpacing: "0.06em" }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* FEATURED CAROUSEL */}
+      {/* CAROUSEL */}
       <style>{`
         .carousel-mobile { display: block; }
         .carousel-desktop { display: none; }
@@ -305,24 +276,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* NEWSLETTER BANNER */}
-      <div style={{ background: C.creamD, padding: "clamp(48px,6vw,72px) 24px" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", background: "linear-gradient(135deg,#1a3a2a,#2d5a42)", borderRadius: 24, padding: "clamp(32px,5vw,52px)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg,#c97a0a,#e8960e)" }} />
-          <h2 style={{ fontFamily: FD, fontSize: "clamp(20px,3.5vw,34px)", fontWeight: 800, color: C.white, lineHeight: 1.15, marginBottom: 14 }}>
-            The Canadian money newsletter that actually explains things.
+      {/* FIX 3: Newsletter banner — full edge to edge, no rounded container */}
+      <div style={{ background: "linear-gradient(135deg,#1a3a2a,#2d5a42)", padding: "clamp(44px,6vw,64px) 24px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg,#c97a0a,#e8960e)" }} />
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <h2 style={{ fontFamily: FD, fontSize: "clamp(22px,3.5vw,38px)", fontWeight: 800, color: C.white, lineHeight: 1.15, marginBottom: 16 }}>
+            The Canadian money newsletter<br />that actually explains things.
           </h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 22 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginBottom: 28 }}>
             {["CRA deadlines you cannot miss","Benefit updates in plain English","One money move per week"].map(t => (
               <div key={t} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.amberL, flexShrink: 0 }} />
-                <span style={{ fontFamily: FB, fontSize: 13, color: "rgba(255,255,255,0.72)" }}>{t}</span>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.amberL, flexShrink: 0 }} />
+                <span style={{ fontFamily: FB, fontSize: 14, color: "rgba(255,255,255,0.78)" }}>{t}</span>
               </div>
             ))}
           </div>
-          <form onSubmit={e => e.preventDefault()} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <input type="email" placeholder="your@email.ca" style={{ flex: "1 1 200px", fontFamily: FB, fontSize: 14, padding: "12px 16px", borderRadius: 10, border: "1.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.09)", color: C.white, outline: "none", minHeight: 44 }} />
-            <button type="submit" style={{ fontFamily: FB, fontSize: 14, fontWeight: 700, padding: "12px 24px", background: "linear-gradient(135deg,#c97a0a,#e8960e)", color: "#1a3a2a", border: "none", borderRadius: 10, minHeight: 44, cursor: "pointer" }}>Subscribe Free</button>
+          <form onSubmit={e => e.preventDefault()} style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 600 }}>
+            <input type="email" placeholder="your@email.ca" style={{ flex: "1 1 220px", fontFamily: FB, fontSize: 15, padding: "14px 18px", borderRadius: 12, border: "1.5px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.1)", color: C.white, outline: "none", minHeight: 50 }} />
+            <button type="submit" style={{ fontFamily: FB, fontSize: 15, fontWeight: 700, padding: "14px 28px", background: "linear-gradient(135deg,#c97a0a,#e8960e)", color: "#1a3a2a", border: "none", borderRadius: 12, minHeight: 50, cursor: "pointer", whiteSpace: "nowrap" }}>Subscribe Free</button>
           </form>
         </div>
       </div>
