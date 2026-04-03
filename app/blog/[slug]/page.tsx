@@ -16,25 +16,26 @@ async function getPost(slug: string) {
   }
 }
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await getPost(params.slug);
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getPost(slug);
   if (!post) notFound();
 
   const thumbnail = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
   const category = post._embedded?.["wp:term"]?.[0]?.[0]?.name || "Guide";
-  const date = new Date(post.date).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
+  const date = new Date(post.date).toLocaleDateString("en-CA", {
+    year: "numeric", month: "long", day: "numeric",
+  });
 
   return (
     <main style={{ background: "#fdf8f0", minHeight: "100vh" }}>
 
-      {/* Back link */}
       <div style={{ maxWidth: 780, margin: "0 auto", padding: "clamp(80px,8vw,100px) 24px 0" }}>
         <Link href="/blog" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, fontWeight: 600, color: "#1a3a2a", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24, opacity: 0.7 }}>
           ← Back to all guides
         </Link>
       </div>
 
-      {/* Header */}
       <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 32px" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fef4e0", border: "1.5px solid #e8d5a0", borderRadius: 20, padding: "4px 12px", marginBottom: 16 }}>
           <span style={{ fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: 700, color: "#c97a0a", letterSpacing: "0.12em", textTransform: "uppercase" }}>{category}</span>
@@ -49,21 +50,32 @@ export default async function PostPage({ params }: { params: { slug: string } })
         <div style={{ height: 3, width: 40, background: "#e8960e", borderRadius: 2, marginBottom: 32 }} />
       </div>
 
-      {/* Featured image */}
       {thumbnail && (
         <div style={{ maxWidth: 780, margin: "0 auto 32px", padding: "0 24px" }}>
           <img src={thumbnail} alt={post.title?.rendered || ""} style={{ width: "100%", borderRadius: 16, display: "block" }} />
         </div>
       )}
 
-      {/* Content */}
       <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px clamp(48px,6vw,72px)" }}>
+        <style>{`
+          .wp-content h2 { font-family: Georgia, serif; font-size: clamp(20px,3vw,26px); font-weight: 700; color: #1a3a2a; margin: 32px 0 12px; line-height: 1.25; }
+          .wp-content h3 { font-family: Georgia, serif; font-size: clamp(17px,2.5vw,22px); font-weight: 700; color: #1a3a2a; margin: 24px 0 10px; }
+          .wp-content p { margin: 0 0 18px; }
+          .wp-content a { color: #c97a0a; text-decoration: underline; }
+          .wp-content ul, .wp-content ol { padding-left: 24px; margin: 0 0 18px; }
+          .wp-content li { margin-bottom: 8px; }
+          .wp-content img { max-width: 100%; border-radius: 12px; margin: 16px 0; }
+          .wp-content blockquote { border-left: 4px solid #e8960e; padding: 12px 20px; margin: 24px 0; background: #fef4e0; border-radius: 0 8px 8px 0; }
+          .wp-content table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+          .wp-content th { background: #1a3a2a; color: #ffffff; padding: 10px 14px; text-align: left; font-family: Segoe UI, sans-serif; font-size: 13px; }
+          .wp-content td { padding: 10px 14px; border-bottom: 1px solid #e8dcc8; font-size: 14px; }
+          .wp-content tr:nth-child(even) td { background: #f2e8d8; }
+        `}</style>
         <div className="wp-content"
           style={{ fontFamily: "Segoe UI, sans-serif", fontSize: "clamp(15px,2vw,17px)", color: "#252220", lineHeight: 1.85 }}
           dangerouslySetInnerHTML={{ __html: post.content?.rendered || "" }} />
       </div>
 
-      {/* Back to blog */}
       <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 48px" }}>
         <div style={{ borderTop: "1px solid #e8dcc8", paddingTop: 32 }}>
           <Link href="/blog" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 14, fontWeight: 700, color: "#ffffff", background: "#1a3a2a", borderRadius: 12, padding: "13px 24px", textDecoration: "none", display: "inline-block" }}>
