@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 
 const WP_API = "http://dimgrey-mule-669807.hostingersite.com/wp-json/wp/v2";
 
-// Pre-build the most recent 24 posts at deploy time
 export async function generateStaticParams() {
   try {
     const res = await fetch(`${WP_API}/posts?per_page=24&_fields=slug`, {
@@ -29,17 +28,43 @@ async function getPost(slug: string) {
   }
 }
 
-function normalizeContent(html: string): string {
+function normalizeUrl(url: string): string {
+  if (!url) return "";
+  return url
+    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com")
+    .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com");
+}
+
+function normalizeContent(html: string, featuredImageUrl: string): string {
   if (!html) return "";
-  return html
+
+  let content = html
+    // Fix image URLs
     .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
     .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
+    // Fix internal post links
     .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
     .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
+    // Fix anchor links
     .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
     .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
+    // Wrap tables
     .replace(/<table/g, '<div class="table-scroll"><table')
     .replace(/<\/table>/g, "</table></div>");
+
+  // If there is a featured image, remove ALL occurrences of it from the content
+  // so it only appears once (as the hero thumbnail)
+  if (featuredImageUrl) {
+    // Extract just the filename to match regardless of size suffix
+    const filename = featuredImageUrl.split("/").pop()?.split(".")[0] || "";
+    if (filename) {
+      // Remove any <figure> or <img> blocks that contain this filename
+      content = content.replace(/<figure[^>]*>.*?<img[^>]*src="[^"]*' + filename.replace(/[-]/g, "[-]") + '[^"]*"[^>]*>.*?<\/figure>/gs, "");
+      content = content.replace(/<img[^>]*src="[^"]*' + filename.replace(/[-]/g, "[-]") + '[^"]*"[^>]*/g, "");
+    }
+  }
+
+  return content;
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -47,72 +72,106 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const post = await getPost(slug);
   if (!post) notFound();
 
-  const rawThumbnail = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "";
-  const thumbnail = normalizeContent(rawThumbnail);
+  const rawFeaturedUrl = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "";
+  const featuredUrl = normalizeUrl(rawFeaturedUrl);
   const category = post._embedded?.["wp:term"]?.[0]?.[0]?.name || "Guide";
   const date = new Date(post.date).toLocaleDateString("en-CA", {
     year: "numeric", month: "long", day: "numeric",
   });
-  const content = normalizeContent(post.content?.rendered || "");
+  // Remove featured image from article body
+  const content = normalizeContent(post.content?.rendered || "", rawFeaturedUrl);
 
   return (
     <main style={{ background: "#fdf8f0", minHeight: "100vh" }}>
 
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "clamp(80px,8vw,100px) 24px 0" }}>
-        <Link href="/blog" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, fontWeight: 600, color: "#1a3a2a", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24, opacity: 0.7 }}>
-          ← Back to all guides
-        </Link>
+      {/* ── HERO ── */}
+      <div style={{ background: "linear-gradient(150deg,#1a3a2a,#2d5a42)", padding: "clamp(80px,8vw,100px) 24px 32px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg,#c97a0a,#e8960e)" }} />
+        <div style={{ position: "absolute", right: -40, top: "50%", transform: "translateY(-50%)", opacity: 0.05, pointerEvents: "none" }}>
+          <svg width={260} height={260} viewBox="0 0 100 100" fill="#e8960e">
+            <path d="M50 5L57 30L75 20L65 40L90 38L72 55L80 80L60 68L50 90L40 68L20 80L28 55L10 38L35 40L25 20L43 30Z" />
+          </svg>
+        </div>
+        <div style={{ maxWidth: 780, margin: "0 auto", position: "relative", zIndex: 1 }}>
+
+          {/* Breadcrumb */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+            <Link href="/" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Home</Link>
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>›</span>
+            <Link href="/blog" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Blog</Link>
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>›</span>
+            <span style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, color: "#e8960e" }}>{category}</span>
+          </div>
+
+          {/* Category badge */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(232,150,14,0.18)", border: "1px solid rgba(232,150,14,0.35)", borderRadius: 20, padding: "4px 12px", marginBottom: 16 }}>
+            <span style={{ fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: 700, color: "#e8960e", letterSpacing: "0.12em", textTransform: "uppercase" }}>{category}</span>
+          </div>
+
+          {/* Title */}
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(22px,4vw,38px)", fontWeight: 900, color: "#ffffff", lineHeight: 1.15, marginBottom: 16 }}
+            dangerouslySetInnerHTML={{ __html: post.title?.rendered || "" }} />
+
+          {/* Author + meta */}
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#c97a0a", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid rgba(255,255,255,0.25)", flexShrink: 0 }}>
+                <span style={{ fontFamily: "Georgia, serif", fontSize: 13, fontWeight: 700, color: "#1a3a2a" }}>CJ</span>
+              </div>
+              <div>
+                <div style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, fontWeight: 700, color: "#ffffff" }}>CJ · HustleHub.ca</div>
+                <div style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>Updated {date}</div>
+              </div>
+            </div>
+            <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.15)" }} />
+            <span style={{ fontFamily: "Courier New, monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>🕐 {Math.max(1, Math.round((post.content?.rendered || "").replace(/<[^>]*>/g,"").split(/\s+/).length / 200))} min read</span>
+          </div>
+        </div>
       </div>
 
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fef4e0", border: "1.5px solid #e8d5a0", borderRadius: 20, padding: "4px 12px", marginBottom: 16 }}>
-          <span style={{ fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: 700, color: "#c97a0a", letterSpacing: "0.12em", textTransform: "uppercase" }}>{category}</span>
-        </div>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(24px,4vw,40px)", fontWeight: 900, color: "#1a3a2a", lineHeight: 1.15, marginBottom: 16 }}
-          dangerouslySetInnerHTML={{ __html: post.title?.rendered || "" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-          <span style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, color: "#b0a898" }}>{date}</span>
-          <span style={{ color: "#e8dcc8" }}>·</span>
-          <span style={{ fontFamily: "Courier New, monospace", fontSize: 12, fontWeight: 700, color: "#c97a0a" }}>HustleHub.ca</span>
-        </div>
-        <div style={{ height: 3, width: 40, background: "#e8960e", borderRadius: 2, marginBottom: 32 }} />
-      </div>
-
-      {thumbnail && (
-        <div style={{ maxWidth: 780, margin: "0 auto 32px", padding: "0 24px" }}>
-          <img src={thumbnail} alt={post.title?.rendered || ""} style={{ width: "100%", borderRadius: 16, display: "block" }} />
-        </div>
-      )}
-
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px clamp(48px,6vw,72px)" }}>
+      {/* ── BODY ── */}
+      <div style={{ maxWidth: 780, margin: "0 auto", padding: "clamp(28px,5vw,44px) 24px clamp(48px,6vw,72px)" }}>
         <style>{`
-          .wp-content h2 { font-family: Georgia, serif; font-size: clamp(20px,3vw,26px); font-weight: 700; color: #1a3a2a; margin: 32px 0 12px; line-height: 1.25; }
-          .wp-content h3 { font-family: Georgia, serif; font-size: clamp(17px,2.5vw,22px); font-weight: 700; color: #1a3a2a; margin: 24px 0 10px; }
+          .wp-content h2 { font-family: Georgia, serif; font-size: clamp(19px,3vw,24px); font-weight: 700; color: #1a3a2a; margin: 36px 0 12px; line-height: 1.25; padding-bottom: 10px; border-bottom: 2px solid #f2e8d8; }
+          .wp-content h3 { font-family: Georgia, serif; font-size: clamp(16px,2.5vw,20px); font-weight: 700; color: #1a3a2a; margin: 24px 0 10px; }
           .wp-content p { margin: 0 0 18px; }
           .wp-content a { color: #c97a0a; text-decoration: underline; }
-          .wp-content a[href^="https://hustlehub.ca"] { color: #1a3a2a; font-weight: 600; }
+          .wp-content a[href^="https://hustlehub.ca"] { color: #1a3a2a; font-weight: 600; text-decoration: none; border-bottom: 1.5px solid #e8d5a0; }
           .wp-content ul, .wp-content ol { padding-left: 24px; margin: 0 0 18px; }
-          .wp-content li { margin-bottom: 8px; }
-          .wp-content img { max-width: 100%; border-radius: 12px; margin: 16px 0; height: auto; }
+          .wp-content li { margin-bottom: 8px; line-height: 1.65; }
+          .wp-content img { max-width: 100%; border-radius: 12px; margin: 20px 0; height: auto; display: block; }
           .wp-content figure { margin: 24px 0; }
-          .wp-content blockquote { border-left: 4px solid #e8960e; padding: 12px 20px; margin: 24px 0; background: #fef4e0; border-radius: 0 8px 8px 0; }
-          .wp-content hr { border: none; border-top: 1px solid #e8dcc8; margin: 32px 0; }
+          .wp-content figcaption { font-family: Segoe UI, sans-serif; font-size: 12px; color: #b0a898; text-align: center; margin-top: 6px; }
+          .wp-content blockquote { border-left: 4px solid #e8960e; padding: 14px 20px; margin: 28px 0; background: #fef4e0; border-radius: 0 10px 10px 0; font-style: italic; }
+          .wp-content hr { border: none; border-top: 1px solid #e8dcc8; margin: 36px 0; }
+          .wp-content strong { font-weight: 700; color: #252220; }
           .wp-content .ez-toc-v2_0_82_2 { display: none; }
           .wp-content .kk-star-ratings { display: none; }
           .wp-content .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 24px 0; border-radius: 10px; border: 1px solid #e8dcc8; }
           .wp-content .table-scroll table { width: 100%; min-width: 480px; border-collapse: collapse; margin: 0; }
-          .wp-content .table-scroll th { background: #1a3a2a; color: #ffffff; padding: 11px 16px; text-align: left; font-family: Segoe UI, sans-serif; font-size: 13px; font-weight: 600; white-space: nowrap; }
+          .wp-content .table-scroll th { background: #1a3a2a; color: #fff; padding: 11px 16px; text-align: left; font-family: Segoe UI, sans-serif; font-size: 13px; font-weight: 600; white-space: nowrap; }
           .wp-content .table-scroll td { padding: 10px 16px; border-bottom: 1px solid #e8dcc8; font-size: 14px; vertical-align: top; }
           .wp-content .table-scroll tr:last-child td { border-bottom: none; }
           .wp-content .table-scroll tr:nth-child(even) td { background: #f2e8d8; }
         `}</style>
-        <div className="wp-content"
-          style={{ fontFamily: "Segoe UI, sans-serif", fontSize: "clamp(15px,2vw,17px)", color: "#252220", lineHeight: 1.85 }}
-          dangerouslySetInnerHTML={{ __html: content }} />
-      </div>
 
-      <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 24px 48px" }}>
-        <div style={{ borderTop: "1px solid #e8dcc8", paddingTop: 32 }}>
+        <div className="wp-content"
+          style={{ fontFamily: "Segoe UI, sans-serif", fontSize: "clamp(15px,2vw,17px)", color: "#252220", lineHeight: 1.88 }}
+          dangerouslySetInnerHTML={{ __html: content }} />
+
+        {/* Newsletter CTA */}
+        <div style={{ background: "linear-gradient(135deg,#1a3a2a,#2d5a42)", borderRadius: 18, padding: "24px 26px", marginTop: 40, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 17, fontWeight: 700, color: "#ffffff", margin: "0 0 4px" }}>Get CRA updates every Tuesday</p>
+            <p style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0 }}>Free newsletter · 40,000+ Canadians reading</p>
+          </div>
+          <Link href="/contact" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, fontWeight: 700, color: "#1a3a2a", background: "#e8960e", borderRadius: 10, padding: "11px 22px", textDecoration: "none", whiteSpace: "nowrap" }}>
+            Subscribe Free
+          </Link>
+        </div>
+
+        {/* Back link */}
+        <div style={{ borderTop: "1px solid #e8dcc8", paddingTop: 28, marginTop: 40 }}>
           <Link href="/blog" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 14, fontWeight: 700, color: "#ffffff", background: "#1a3a2a", borderRadius: 12, padding: "13px 24px", textDecoration: "none", display: "inline-block" }}>
             ← Back to all guides
           </Link>
