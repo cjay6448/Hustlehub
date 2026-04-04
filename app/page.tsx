@@ -104,7 +104,11 @@ function FeaturedCarousel(): JSX.Element {
   const rafRef = useRef<number>(0);
   const pausedRef = useRef(false);
   const posRef = useRef(0);
+  const touchStartX = useRef(0);
+  const touchStartPos = useRef(0);
+  const isDragging = useRef(false);
   const all = [...POSTS, ...POSTS];
+
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -120,10 +124,38 @@ function FeaturedCarousel(): JSX.Element {
     rafRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    pausedRef.current = true;
+    isDragging.current = true;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartPos.current = posRef.current;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || !trackRef.current) return;
+    const delta = touchStartX.current - e.touches[0].clientX;
+    const half = trackRef.current.scrollWidth / 2;
+    let newPos = touchStartPos.current + delta;
+    if (newPos < 0) newPos = 0;
+    if (newPos >= half) newPos = half - 1;
+    posRef.current = newPos;
+    trackRef.current.style.transform = "translateX(-" + newPos + "px)";
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    setTimeout(() => { pausedRef.current = false; }, 1000);
+  };
+
   return (
-    <div onMouseEnter={() => { pausedRef.current = true; }} onMouseLeave={() => { pausedRef.current = false; }}
-      onTouchStart={() => { pausedRef.current = true; }} onTouchEnd={() => { pausedRef.current = false; }}
-      style={{ overflow: "hidden", cursor: "grab" }}>
+    <div
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ overflow: "hidden", cursor: "grab", touchAction: "pan-y" }}>
       <div ref={trackRef} style={{ display: "flex", gap: 16, width: "max-content" }}>
         {all.map((post, i) => (
           <a key={i} href="/blog" style={{ width: "min(280px,72vw)", flexShrink: 0, background: C.white, borderRadius: 18, overflow: "hidden", textDecoration: "none", border: "1.5px solid #e8dcc8", boxShadow: "0 2px 14px rgba(26,58,42,0.06)", display: "flex", flexDirection: "column" }}>
