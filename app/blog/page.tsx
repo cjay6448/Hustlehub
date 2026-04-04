@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const WP_API = "http://dimgrey-mule-669807.hostingersite.com/wp-json/wp/v2";
 
@@ -28,29 +28,27 @@ function normalizeUrl(url: string): string {
 const COLORS = ["#1a3a2a","#c97a0a","#2d5a42","#5a3e28","#2a5a6a","#3a2a5a"];
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [allPosts, setAllPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch everything on mount via API route to avoid CORS
   useEffect(() => {
-    // Fetch categories
-    fetch(`${WP_API}/categories?per_page=20`)
-      .then(r => r.json())
-      .then(data => setCategories(data.filter((c: any) => c.count > 0)))
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/posts").then(r => r.json()).catch(() => []),
+      fetch("/api/categories").then(r => r.json()).catch(() => []),
+    ]).then(([posts, cats]) => {
+      setAllPosts(Array.isArray(posts) ? posts : []);
+      setCategories(Array.isArray(cats) ? cats.filter((c: any) => c.count > 0) : []);
+      setLoading(false);
+    });
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    const url = activeCategory
-      ? `${WP_API}/posts?per_page=24&_embed&categories=${activeCategory}`
-      : `${WP_API}/posts?per_page=24&_embed`;
-    fetch(url)
-      .then(r => r.json())
-      .then(data => { setPosts(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [activeCategory]);
+  // Filter posts client-side
+  const posts = activeCategory
+    ? allPosts.filter((p: any) => p.categories?.includes(activeCategory))
+    : allPosts;
 
   return (
     <main style={{ background: "#fdf8f0", minHeight: "100vh" }}>
@@ -76,54 +74,33 @@ export default function BlogPage() {
       </div>
 
       {/* Category filter */}
-      <div style={{ background: "#f2e8d8", borderBottom: "1px solid #e8dcc8", padding: "14px 24px", overflowX: "auto" }}>
-        <div style={{ display: "flex", gap: 8, maxWidth: 1020, margin: "0 auto", flexWrap: "wrap" }}>
-
-          {/* All Posts tag */}
-          <button
-            onClick={() => setActiveCategory(null)}
-            style={{
-              fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 700,
-              color: activeCategory === null ? "#ffffff" : "#1a3a2a",
-              background: activeCategory === null ? "#1a3a2a" : "#ffffff",
-              border: activeCategory === null ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8",
-              borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap",
-              transition: "all 0.2s",
-            }}>
-            All Posts
-          </button>
-
-          {/* Category tags */}
-          {categories.map((cat: any) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              style={{
-                fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 600,
-                color: activeCategory === cat.id ? "#ffffff" : "#1a3a2a",
-                background: activeCategory === cat.id ? "#1a3a2a" : "#ffffff",
-                border: activeCategory === cat.id ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8",
-                borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap",
-                transition: "all 0.2s",
-              }}>
-              {cat.name} <span style={{ opacity: 0.55, fontWeight: 400 }}>({cat.count})</span>
+      {categories.length > 0 && (
+        <div style={{ background: "#f2e8d8", borderBottom: "1px solid #e8dcc8", padding: "14px 24px", overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: 8, maxWidth: 1020, margin: "0 auto", flexWrap: "wrap" }}>
+            <button onClick={() => setActiveCategory(null)} style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 700, color: activeCategory === null ? "#ffffff" : "#1a3a2a", background: activeCategory === null ? "#1a3a2a" : "#ffffff", border: activeCategory === null ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8", borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>
+              All Posts
             </button>
-          ))}
+            {categories.map((cat: any) => (
+              <button key={cat.id} onClick={() => setActiveCategory(cat.id)} style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 600, color: activeCategory === cat.id ? "#ffffff" : "#1a3a2a", background: activeCategory === cat.id ? "#1a3a2a" : "#ffffff", border: activeCategory === cat.id ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8", borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>
+                {cat.name} <span style={{ opacity: 0.55, fontWeight: 400 }}>({cat.count})</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Posts grid */}
       <div style={{ maxWidth: 1020, margin: "0 auto", padding: "clamp(36px,5vw,56px) 24px" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "60px 24px" }}>
-            <p style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "#1a3a2a" }}>Loading articles...</p>
+            <div style={{ width: 40, height: 40, border: "3px solid #e8dcc8", borderTop: "3px solid #1a3a2a", borderRadius: "50%", margin: "0 auto 16px", animation: "spin 1s linear infinite" }} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 16, color: "#7a7060" }}>Loading articles...</p>
           </div>
         ) : posts.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 24px" }}>
-            <p style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "#1a3a2a", marginBottom: 8 }}>No articles found</p>
-            <button onClick={() => setActiveCategory(null)} style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, fontWeight: 600, color: "#ffffff", background: "#1a3a2a", border: "none", borderRadius: 10, padding: "10px 20px", cursor: "pointer" }}>
-              View All Posts
-            </button>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "#1a3a2a", marginBottom: 16 }}>No articles in this category</p>
+            <button onClick={() => setActiveCategory(null)} style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 13, fontWeight: 600, color: "#ffffff", background: "#1a3a2a", border: "none", borderRadius: 10, padding: "10px 20px", cursor: "pointer" }}>View All Posts</button>
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 20 }}>
