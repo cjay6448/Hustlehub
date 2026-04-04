@@ -16,12 +16,18 @@ async function getPost(slug: string) {
   }
 }
 
-// Fix all image URLs in content: force https, remove wp. subdomain
 function normalizeContent(html: string): string {
   if (!html) return "";
   return html
-    .replace(/http:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com")
-    .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com");
+    .replace(/http:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
+    .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
+    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
+    .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
+    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/([^"]+)#/g, "#")
+    .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/([^"]+)#/g, "#")
+    // Wrap every <table> in a scrollable div
+    .replace(/<table/g, '<div class="table-scroll"><table')
+    .replace(/<\/table>/g, "</table></div>");
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -72,18 +78,53 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           .wp-content h3 { font-family: Georgia, serif; font-size: clamp(17px,2.5vw,22px); font-weight: 700; color: #1a3a2a; margin: 24px 0 10px; }
           .wp-content p { margin: 0 0 18px; }
           .wp-content a { color: #c97a0a; text-decoration: underline; }
+          .wp-content a[href^="https://hustlehub.ca"] { color: #1a3a2a; font-weight: 600; }
           .wp-content ul, .wp-content ol { padding-left: 24px; margin: 0 0 18px; }
           .wp-content li { margin-bottom: 8px; }
           .wp-content img { max-width: 100%; border-radius: 12px; margin: 16px 0; height: auto; }
           .wp-content figure { margin: 24px 0; }
           .wp-content blockquote { border-left: 4px solid #e8960e; padding: 12px 20px; margin: 24px 0; background: #fef4e0; border-radius: 0 8px 8px 0; }
-          .wp-content table { width: 100%; border-collapse: collapse; margin: 24px 0; }
-          .wp-content th { background: #1a3a2a; color: #ffffff; padding: 10px 14px; text-align: left; font-family: Segoe UI, sans-serif; font-size: 13px; }
-          .wp-content td { padding: 10px 14px; border-bottom: 1px solid #e8dcc8; font-size: 14px; }
-          .wp-content tr:nth-child(even) td { background: #f2e8d8; }
           .wp-content hr { border: none; border-top: 1px solid #e8dcc8; margin: 32px 0; }
           .wp-content .ez-toc-v2_0_82_2 { display: none; }
           .wp-content .kk-star-ratings { display: none; }
+
+          /* Scrollable table wrapper */
+          .wp-content .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 24px 0;
+            border-radius: 10px;
+            border: 1px solid #e8dcc8;
+          }
+          .wp-content .table-scroll table {
+            width: 100%;
+            min-width: 480px;
+            border-collapse: collapse;
+            margin: 0;
+          }
+          .wp-content .table-scroll th {
+            background: #1a3a2a;
+            color: #ffffff;
+            padding: 11px 16px;
+            text-align: left;
+            font-family: Segoe UI, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+          }
+          .wp-content .table-scroll td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e8dcc8;
+            font-size: 14px;
+            vertical-align: top;
+          }
+          .wp-content .table-scroll tr:last-child td {
+            border-bottom: none;
+          }
+          .wp-content .table-scroll tr:nth-child(even) td {
+            background: #f2e8d8;
+          }
         `}</style>
         <div className="wp-content"
           style={{ fontFamily: "Segoe UI, sans-serif", fontSize: "clamp(15px,2vw,17px)", color: "#252220", lineHeight: 1.85 }}
