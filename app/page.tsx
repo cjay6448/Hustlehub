@@ -205,11 +205,11 @@ export default function Home() {
   ];
 
   return (
-    <main style={{ background: C.cream }}>
+    <main style={{ background: "var(--bg, #fdf8f0)" }}>
       <AnimatePresence>{showPopup && <NewsletterPopup onClose={() => setShowPopup(false)} />}</AnimatePresence>
 
       {/* HERO */}
-      <div style={{ background: "linear-gradient(170deg,#fdf8f0,#f2e8d8)", padding: "clamp(88px,12vw,110px) 26px clamp(36px,5vw,48px)", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: "var(--bg, linear-gradient(170deg,#fdf8f0,#f2e8d8))", padding: "clamp(88px,12vw,110px) 26px clamp(36px,5vw,48px)", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px,rgba(201,122,10,0.1) 1px,transparent 0)", backgroundSize: "28px 28px", pointerEvents: "none" }} />
         <div style={{ position: "absolute", right: -50, top: "45%", transform: "translateY(-50%)", opacity: 0.04, pointerEvents: "none" }}><Maple size={360} color={C.forest} /></div>
         <div style={{ maxWidth: 700, margin: "0 auto", position: "relative", zIndex: 1 }}>
@@ -274,7 +274,7 @@ export default function Home() {
           .carousel-desktop { display: block; }
         }
       `}</style>
-      <div style={{ background: C.creamD, padding: "clamp(44px,6vw,64px) 0" }}>
+      <div style={{ background: "var(--cream-d, #f2e8d8)", padding: "clamp(44px,6vw,64px) 0" }}>
         <div style={{ maxWidth: 1020, margin: "0 auto", padding: "0 24px 20px" }}>
           <p style={{ fontFamily: FB, fontSize: 11, fontWeight: 700, color: C.amber, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>Featured Reading</p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
@@ -292,7 +292,7 @@ export default function Home() {
       </div>
 
       {/* PILLARS */}
-      <div style={{ background: C.cream, padding: "clamp(52px,7vw,80px) 24px" }}>
+      <div style={{ background: "var(--bg, #fdf8f0)", padding: "clamp(52px,7vw,80px) 24px" }}>
         <div style={{ maxWidth: 1020, margin: "0 auto" }}>
           <h2 style={{ fontFamily: FD, fontSize: "clamp(22px,3.5vw,34px)", fontWeight: 700, color: C.forest, textAlign: "center", marginBottom: 40 }}>Everything Canadian Finance, Nothing Else</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 16 }}>
