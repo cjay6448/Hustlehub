@@ -1,3 +1,4 @@
+"use server";
 import Link from "next/link";
 
 const WP_API = "http://dimgrey-mule-669807.hostingersite.com/wp-json/wp/v2";
@@ -41,9 +42,12 @@ function readTime(content: string) {
   return `${Math.max(1, Math.round(words / 200))} min`;
 }
 
-function toHttps(url: string) {
-  if (!url) return url;
-  return url.replace("http://", "https://");
+// Normalize image URL: force https, replace wp. subdomain with base domain
+function normalizeImageUrl(url: string): string {
+  if (!url) return "";
+  return url
+    .replace("http://wp.dimgrey-mule-669807.hostingersite.com", "https://dimgrey-mule-669807.hostingersite.com")
+    .replace("http://dimgrey-mule-669807.hostingersite.com", "https://dimgrey-mule-669807.hostingersite.com");
 }
 
 const COLORS = ["#1a3a2a","#c97a0a","#2d5a42","#5a3e28","#2a5a6a","#3a2a5a"];
@@ -99,7 +103,8 @@ export default async function BlogPage() {
             {posts.map((post: any, i: number) => {
               const color = COLORS[i % COLORS.length];
               const excerpt = stripHtml(post.excerpt?.rendered || "");
-              const thumbnail = toHttps(post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "");
+              const rawThumbnail = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+              const thumbnail = normalizeImageUrl(rawThumbnail || "");
               const category = post._embedded?.["wp:term"]?.[0]?.[0]?.name || "Guide";
               return (
                 <Link key={post.id} href={`/blog/${post.slug}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: 18, overflow: "hidden", border: "1.5px solid #e8dcc8", boxShadow: "0 2px 14px rgba(26,58,42,0.06)" }}>
@@ -109,8 +114,6 @@ export default async function BlogPage() {
                         src={thumbnail}
                         alt={stripHtml(post.title?.rendered || "")}
                         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        referrerPolicy="no-referrer"
-                        crossOrigin="anonymous"
                       />
                     </div>
                   ) : (
