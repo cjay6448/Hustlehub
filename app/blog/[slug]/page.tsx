@@ -5,27 +5,19 @@ const WP_API = "http://dimgrey-mule-669807.hostingersite.com/wp-json/wp/v2";
 
 export async function generateStaticParams() {
   try {
-    const res = await fetch(`${WP_API}/posts?per_page=24&_fields=slug`, {
-      next: { revalidate: 3600 },
-    });
+    const res = await fetch(`${WP_API}/posts?per_page=24&_fields=slug`, { next: { revalidate: 3600 } });
     const posts = await res.json();
     return posts.map((p: any) => ({ slug: p.slug }));
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 async function getPost(slug: string) {
   try {
-    const res = await fetch(`${WP_API}/posts?slug=${slug}&_embed`, {
-      next: { revalidate: 3600 },
-    });
+    const res = await fetch(`${WP_API}/posts?slug=${slug}&_embed`, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     const posts = await res.json();
     return posts[0] || null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function normalizeUrl(url: string): string {
@@ -35,36 +27,28 @@ function normalizeUrl(url: string): string {
     .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com");
 }
 
-function normalizeContent(html: string, featuredImageUrl: string): string {
+function normalizeContent(html: string, featuredUrl: string): string {
   if (!html) return "";
-
-  let content = html
-    // Fix image URLs
+  let c = html
     .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
     .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
-    // Fix internal post links
     .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
     .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
-    // Fix anchor links
     .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
     .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
-    // Wrap tables
     .replace(/<table/g, '<div class="table-scroll"><table')
     .replace(/<\/table>/g, "</table></div>");
 
-  // If there is a featured image, remove ALL occurrences of it from the content
-  // so it only appears once (as the hero thumbnail)
-  if (featuredImageUrl) {
-    // Extract just the filename to match regardless of size suffix
-    const filename = featuredImageUrl.split("/").pop()?.split(".")[0] || "";
+  // Remove featured image from content so it only shows as thumbnail
+  if (featuredUrl) {
+    const filename = featuredUrl.split("/").pop()?.replace(/\.[^.]+$/, "") || "";
     if (filename) {
-      // Remove any <figure> or <img> blocks that contain this filename
-      content = content.replace(/<figure[^>]*>.*?<img[^>]*src="[^"]*' + filename.replace(/[-]/g, "[-]") + '[^"]*"[^>]*>.*?<\/figure>/gs, "");
-      content = content.replace(/<img[^>]*src="[^"]*' + filename.replace(/[-]/g, "[-]") + '[^"]*"[^>]*/g, "");
+      const safe = filename.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      c = c.replace(new RegExp(`<figure[^>]*>[\\s\\S]*?<img[^>]*src="[^"]*${safe}[^"]*"[\\s\\S]*?<\\/figure>`, "gi"), "");
+      c = c.replace(new RegExp(`<img[^>]*src="[^"]*${safe}[^"]*"[^>]*>`, "gi"), "");
     }
   }
-
-  return content;
+  return c;
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -72,50 +56,44 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const post = await getPost(slug);
   if (!post) notFound();
 
-  const rawFeaturedUrl = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "";
-  const featuredUrl = normalizeUrl(rawFeaturedUrl);
+  const rawFeatured = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "";
   const category = post._embedded?.["wp:term"]?.[0]?.[0]?.name || "Guide";
-  const date = new Date(post.date).toLocaleDateString("en-CA", {
-    year: "numeric", month: "long", day: "numeric",
-  });
-  // Remove featured image from article body
-  const content = normalizeContent(post.content?.rendered || "", rawFeaturedUrl);
+  const date = new Date(post.date).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
+  const wordCount = (post.content?.rendered || "").replace(/<[^>]*>/g, "").split(/\s+/).length;
+  const readTime = Math.max(1, Math.round(wordCount / 200));
+  const content = normalizeContent(post.content?.rendered || "", rawFeatured);
 
   return (
     <main style={{ background: "#fdf8f0", minHeight: "100vh" }}>
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <div style={{ background: "linear-gradient(150deg,#1a3a2a,#2d5a42)", padding: "clamp(80px,8vw,100px) 24px 32px", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg,#c97a0a,#e8960e)" }} />
         <div style={{ position: "absolute", right: -40, top: "50%", transform: "translateY(-50%)", opacity: 0.05, pointerEvents: "none" }}>
-          <svg width={260} height={260} viewBox="0 0 100 100" fill="#e8960e">
+          <svg width={240} height={240} viewBox="0 0 100 100" fill="#e8960e">
             <path d="M50 5L57 30L75 20L65 40L90 38L72 55L80 80L60 68L50 90L40 68L20 80L28 55L10 38L35 40L25 20L43 30Z" />
           </svg>
         </div>
         <div style={{ maxWidth: 780, margin: "0 auto", position: "relative", zIndex: 1 }}>
-
           {/* Breadcrumb */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
             <Link href="/" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Home</Link>
-            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>›</span>
+            <span style={{ color: "rgba(255,255,255,0.25)" }}>›</span>
             <Link href="/blog" style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Blog</Link>
-            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>›</span>
+            <span style={{ color: "rgba(255,255,255,0.25)" }}>›</span>
             <span style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, color: "#e8960e" }}>{category}</span>
           </div>
-
           {/* Category badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(232,150,14,0.18)", border: "1px solid rgba(232,150,14,0.35)", borderRadius: 20, padding: "4px 12px", marginBottom: 16 }}>
             <span style={{ fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: 700, color: "#e8960e", letterSpacing: "0.12em", textTransform: "uppercase" }}>{category}</span>
           </div>
-
           {/* Title */}
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(22px,4vw,38px)", fontWeight: 900, color: "#ffffff", lineHeight: 1.15, marginBottom: 16 }}
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(22px,4vw,38px)", fontWeight: 900, color: "#ffffff", lineHeight: 1.15, marginBottom: 20 }}
             dangerouslySetInnerHTML={{ __html: post.title?.rendered || "" }} />
-
           {/* Author + meta */}
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#c97a0a", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid rgba(255,255,255,0.25)", flexShrink: 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#c97a0a", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid rgba(255,255,255,0.25)", flexShrink: 0 }}>
                 <span style={{ fontFamily: "Georgia, serif", fontSize: 13, fontWeight: 700, color: "#1a3a2a" }}>CJ</span>
               </div>
               <div>
@@ -124,12 +102,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               </div>
             </div>
             <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.15)" }} />
-            <span style={{ fontFamily: "Courier New, monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>🕐 {Math.max(1, Math.round((post.content?.rendered || "").replace(/<[^>]*>/g,"").split(/\s+/).length / 200))} min read</span>
+            <span style={{ fontFamily: "Courier New, monospace", fontSize: 11, color: "rgba(255,255,255,0.55)" }}>{readTime} min read</span>
           </div>
         </div>
       </div>
 
-      {/* ── BODY ── */}
+      {/* BODY */}
       <div style={{ maxWidth: 780, margin: "0 auto", padding: "clamp(28px,5vw,44px) 24px clamp(48px,6vw,72px)" }}>
         <style>{`
           .wp-content h2 { font-family: Georgia, serif; font-size: clamp(19px,3vw,24px); font-weight: 700; color: #1a3a2a; margin: 36px 0 12px; line-height: 1.25; padding-bottom: 10px; border-bottom: 2px solid #f2e8d8; }
