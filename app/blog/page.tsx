@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const WP_API = "http://dimgrey-mule-669807.hostingersite.com/wp-json/wp/v2";
-
 function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").trim();
 }
@@ -28,27 +26,30 @@ function normalizeUrl(url: string): string {
 const COLORS = ["#1a3a2a","#c97a0a","#2d5a42","#5a3e28","#2a5a6a","#3a2a5a"];
 
 export default function BlogPage() {
-  const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch everything on mount via API route to avoid CORS
+  // Fetch categories once on mount
   useEffect(() => {
-    Promise.all([
-      fetch("/api/posts").then(r => r.json()).catch(() => []),
-      fetch("/api/categories").then(r => r.json()).catch(() => []),
-    ]).then(([posts, cats]) => {
-      setAllPosts(Array.isArray(posts) ? posts : []);
-      setCategories(Array.isArray(cats) ? cats.filter((c: any) => c.count > 0) : []);
-      setLoading(false);
-    });
+    fetch("/api/categories")
+      .then(r => r.json())
+      .then(data => setCategories(Array.isArray(data) ? data.filter((c: any) => c.count > 0) : []))
+      .catch(() => {});
   }, []);
 
-  // Filter posts client-side
-  const posts = activeCategory
-    ? allPosts.filter((p: any) => p.categories?.includes(activeCategory))
-    : allPosts;
+  // Fetch posts whenever active category changes
+  useEffect(() => {
+    setLoading(true);
+    const url = activeCategory
+      ? `/api/posts?category=${activeCategory}`
+      : `/api/posts`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => { setPosts(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [activeCategory]);
 
   return (
     <main style={{ background: "#fdf8f0", minHeight: "100vh" }}>
@@ -77,11 +78,13 @@ export default function BlogPage() {
       {categories.length > 0 && (
         <div style={{ background: "#f2e8d8", borderBottom: "1px solid #e8dcc8", padding: "14px 24px", overflowX: "auto" }}>
           <div style={{ display: "flex", gap: 8, maxWidth: 1020, margin: "0 auto", flexWrap: "wrap" }}>
-            <button onClick={() => setActiveCategory(null)} style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 700, color: activeCategory === null ? "#ffffff" : "#1a3a2a", background: activeCategory === null ? "#1a3a2a" : "#ffffff", border: activeCategory === null ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8", borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>
+            <button onClick={() => setActiveCategory(null)}
+              style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 700, color: activeCategory === null ? "#ffffff" : "#1a3a2a", background: activeCategory === null ? "#1a3a2a" : "#ffffff", border: activeCategory === null ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8", borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>
               All Posts
             </button>
             {categories.map((cat: any) => (
-              <button key={cat.id} onClick={() => setActiveCategory(cat.id)} style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 600, color: activeCategory === cat.id ? "#ffffff" : "#1a3a2a", background: activeCategory === cat.id ? "#1a3a2a" : "#ffffff", border: activeCategory === cat.id ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8", borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>
+              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                style={{ fontFamily: "Segoe UI, sans-serif", fontSize: 12, fontWeight: 600, color: activeCategory === cat.id ? "#ffffff" : "#1a3a2a", background: activeCategory === cat.id ? "#1a3a2a" : "#ffffff", border: activeCategory === cat.id ? "1.5px solid #1a3a2a" : "1.5px solid #e8dcc8", borderRadius: 20, padding: "6px 16px", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}>
                 {cat.name} <span style={{ opacity: 0.55, fontWeight: 400 }}>({cat.count})</span>
               </button>
             ))}
