@@ -108,49 +108,18 @@ input, textarea, select { font-size: 16px; }
     justify-content: space-around !important;
   }
 }
-/* ── Dark Mode (Option A: Deep Forest Dark) ── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:        #0d1f16;
-    --bg-card:   #142a1e;
-    --bg-stat:   #1a3a2a;
-    --text:      #e8f0eb;
-    --muted:     #8aab92;
-    --border:    rgba(255,255,255,0.08);
-    --cream:     #0d1f16;
-    --cream-d:   #0a1a12;
-    --cream-dd:  rgba(255,255,255,0.08);
-    --amber-pale:#1a2e1e;
-    --amber-border: rgba(232,150,14,0.25);
-    --charcoal:  #0a1a12;
-    --white:     #e8f0eb;
-    --navbar-bg: rgba(13,31,22,0.97);
-    --footer-bg: #0a1a12;
-  }
-}
 
+
+/* ── Dark Mode: Deep Forest Dark ── */
+/* Controlled entirely by JS via data-theme attribute — no media query */
 [data-theme="dark"] {
-  --bg:        #0d1f16;
-  --bg-card:   #142a1e;
-  --bg-stat:   #1a3a2a;
-  --text:      #e8f0eb;
-  --muted:     #8aab92;
-  --border:    rgba(255,255,255,0.08);
-  --cream:     #0d1f16;
-  --cream-d:   #0a1a12;
-  --cream-dd:  rgba(255,255,255,0.08);
-  --amber-pale:#1a2e1e;
-  --amber-border: rgba(232,150,14,0.25);
-  --charcoal:  #0a1a12;
-  --white:     #e8f0eb;
-  --navbar-bg: rgba(13,31,22,0.97);
-  --footer-bg: #0a1a12;
+  --bg:           #0d1f16;
+  --bg-card:      #142a1e;
+  --bg-stat:      #1a3a2a;
+  --text:         #e8f0eb;
+  --muted:        #8aab92;
+  --border:       rgba(255,255,255,0.08);
+  --navbar-bg:    rgba(13,31,22,0.97);
 }
-
-/* Apply dark mode to page backgrounds */
-@media (prefers-color-scheme: dark) {
-  body { background-color: #0d1f16 !important; }
-  main { background-color: #0d1f16 !important; }
-}
-[data-theme="dark"] body { background-color: #0d1f16 !important; }
-[data-theme="dark"] main { background-color: #0d1f16 !important; }
+[data-theme="dark"] body  { background-color: #0d1f16 !important; color: #e8f0eb !important; }
+[data-theme="dark"] main  { background-color: #0d1f16 !important; }

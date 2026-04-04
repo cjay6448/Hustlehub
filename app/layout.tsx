@@ -16,6 +16,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <script dangerouslySetInnerHTML={{ __html: `
+  (function() {
+    try {
+      var saved = localStorage.getItem('hh-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else if (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    } catch(e) {}
+  })();
+`}} />
       <body>
         <Navbar />
         {children}
