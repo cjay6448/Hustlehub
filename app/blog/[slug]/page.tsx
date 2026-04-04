@@ -3,6 +3,19 @@ import { notFound } from "next/navigation";
 
 const WP_API = "http://dimgrey-mule-669807.hostingersite.com/wp-json/wp/v2";
 
+// Pre-build the most recent 24 posts at deploy time
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${WP_API}/posts?per_page=24&_fields=slug`, {
+      next: { revalidate: 3600 },
+    });
+    const posts = await res.json();
+    return posts.map((p: any) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
+
 async function getPost(slug: string) {
   try {
     const res = await fetch(`${WP_API}/posts?slug=${slug}&_embed`, {
@@ -16,19 +29,15 @@ async function getPost(slug: string) {
   }
 }
 
-// Normalize ALL hostingersite URLs — http or https, with or without wp. subdomain
 function normalizeContent(html: string): string {
   if (!html) return "";
   return html
-    // Step 1: strip wp. subdomain from ALL hostingersite URLs (http and https)
-    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com")
-    // Step 2: force http to https on base domain
-    .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com/g, "https://dimgrey-mule-669807.hostingersite.com")
-    // Step 3: rewrite internal post links to hustlehub.ca/blog/slug
-    .replace(/https:\/\/dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
-    // Step 4: fix anchor links — strip the full URL, keep just the #anchor
-    .replace(/https:\/\/dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
-    // Step 5: wrap tables for horizontal scroll
+    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
+    .replace(/http:\/\/dimgrey-mule-669807\.hostingersite\.com\/wp-content/g, "https://dimgrey-mule-669807.hostingersite.com/wp-content")
+    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
+    .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/(?!wp-content)([^/"#?]+)\//g, "https://hustlehub.ca/blog/$1/")
+    .replace(/https?:\/\/wp\.dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
+    .replace(/https?:\/\/dimgrey-mule-669807\.hostingersite\.com\/[^"]*#/g, "#")
     .replace(/<table/g, '<div class="table-scroll"><table')
     .replace(/<\/table>/g, "</table></div>");
 }
