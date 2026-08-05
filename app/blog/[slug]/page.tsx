@@ -43,9 +43,12 @@ function normalizeContent(html: string, featuredUrl: string): string {
   if (featuredUrl) {
     const filename = featuredUrl.split("/").pop()?.replace(/\.[^.]+$/, "") || "";
     if (filename) {
-      const safe = filename.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      c = c.replace(new RegExp(`<figure[^>]*>[\\s\\S]*?<img[^>]*src="[^"]*${safe}[^"]*"[\\s\\S]*?<\\/figure>`, "gi"), "");
-      c = c.replace(new RegExp(`<img[^>]*src="[^"]*${safe}[^"]*"[^>]*>`, "gi"), "");
+      const parts = c.split("<figure");
+      const filtered = parts.filter(p => !p.includes(filename));
+      c = filtered.length < parts.length ? filtered[0] + filtered.slice(1).map(p => "<figure" + p).join("") : c;
+      const imgParts = c.split("<img");
+      const imgFiltered = imgParts.filter((p, i) => i === 0 || !p.includes(filename));
+      c = imgFiltered.length < imgParts.length ? imgFiltered[0] + imgFiltered.slice(1).map(p => "<img" + p).join("") : c;
     }
   }
   return c;
